@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - DivTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-chart-line me-2"></i>Dividend Dashboard
+        </h1>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card info">
+            <div class="stat-number">${{ "%.2f"|format(data.initial_investment) }}</div>
+            <div class="stat-label">Initial Investment</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card {% if data.principal_recovered %}success{% else %}warning{% endif %}">
+            <div class="stat-number">${{ "%.2f"|format(data.total_dividends) }}</div>
+            <div class="stat-label">Total Dividends</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card {% if data.principal_recovered %}success{% else %}warning{% endif %}">
+            <div class="stat-number">{{ "%.1f"|format(progress_percentage) }}%</div>
+            <div class="stat-label">Recovery Progress</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card success">
+            <div class="stat-number">${{ "%.2f"|format(data.post_recovery_gains) }}</div>
+            <div class="stat-label">Post-Recovery Gains</div>
+        </div>
+    </div>
+</div>
+
+<!-- Principal Recovery Progress -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-target me-2"></i>Principal Recovery Progress
+            </div>
+            <div class="card-body">
+                {% if data.initial_investment > 0 %}
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ progress_percentage }}%" 
+                             aria-valuenow="{{ progress_percentage }}" 
+                             aria-valuemin="0" aria-valuemax="100">
+                            {{ "%.1f"|format(progress_percentage) }}%
+                        </div>
+                    </div>
+                    
+                    {% if data.principal_recovered %}
+                        <div class="milestone-badge">
+                            <i class="fas fa-trophy me-2"></i>
+                            🎉 Principal Recovered! 🎉
+                        </div>
+                        <p class="text-muted mt-2">
+                            <i class="fas fa-calendar-check me-1"></i>
+                            Recovery achieved on {{ data.recovery_date }}
+                        </p>
+                    {% else %}
+                        <p class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            ${{ "%.2f"|format(data.initial_investment - data.total_dividends) }} remaining to recover principal
+                        </p>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please set your initial investment amount in 
+                        <a href="{{ url_for('settings') }}" class="alert-link">Settings</a> 
+                        to start tracking principal recovery.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Additional Info -->
+<div class="row">
+    <!-- Monthly Dividend Chart -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-bar me-2"></i>Monthly Dividend Income
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Transactions -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-list me-2"></i>Recent Transactions
+            </div>
+            <div class="card-body">
+                {% if data.transactions %}
+                    <div class="list-group list-group-flush">
+                        {% for transaction in data.transactions[-5:]|reverse %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted">{{ transaction.date }}</small>
+                                        <div class="small">{{ transaction.description[:30] }}{% if transaction.description|length > 30 %}...{% endif %}</div>
+                                    </div>
+                                    <span class="badge bg-success">${{ "%.2f"|format(transaction.amount) }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% if data.transactions|length > 5 %}
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                Showing last 5 of {{ data.transactions|length }} transactions
+                            </small>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>No transactions yet</p>
+                        <p class="small">Upload your first CSV file to get started</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-bolt me-2"></i>Quick Actions
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('upload_file') }}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-upload me-2"></i>Upload New CSV
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('settings') }}" class="btn btn-outline-primary w-100 mb-2">
+                            <i class="fas fa-cog me-2"></i>Update Settings
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-outline-danger w-100 mb-2" 
+                                data-bs-toggle="modal" data-bs-target="#resetModal">
+                            <i class="fas fa-trash me-2"></i>Reset Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Data Modal -->
+<div class="modal fade" id="resetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Reset All Data
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to reset all dividend data? This action cannot be undone.</p>
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    A backup will be created before resetting.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('reset_data') }}" style="display: inline;">
+                    <input type="hidden" name="confirm" value="yes">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Reset All Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Monthly Dividend Chart
+const ctx = document.getElementById('monthlyChart').getContext('2d');
+const monthlyData = {{ monthly_data|tojson }};
+
+if (monthlyData.length > 0) {
+    const labels = monthlyData.map(item => item.month);
+    const amounts = monthlyData.map(item => item.amount);
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Dividend Income ($)',
+                data: amounts,
+                backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                borderColor: 'rgba(52, 152, 219, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+} else {
+    // Show message if no data
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#6c757d';
+    ctx.textAlign = 'center';
+    ctx.fillText('No monthly data available', ctx.canvas.width / 2, ctx.canvas.height / 2);
+}
+</script>
+{% endblock %}
