@@ -28,12 +28,10 @@ A local web application that helps track dividend income from investments, focus
    pip install -r requirements.txt
    ```
 
-3. Run the application:
+3. Run the application which will automatically open a localhost server in your default browser:
    ```bash
-   python app.py
+   python start.py
    ```
-
-4. Open your browser and go to: `http://localhost:5000`
 
 ### First Time Setup
 
@@ -46,9 +44,8 @@ A local web application that helps track dividend income from investments, focus
 ### Getting Your Robinhood CSV
 
 1. Log into your Robinhood account
-2. Navigate to **Account → History**
-3. Click **"Export"** or **"Download CSV"**
-4. Select your desired date range
+2. Navigate to **Account → History → Reports and Statements**
+3. Select your desired date range
 5. Download the CSV file
 
 ### Uploading Files
@@ -73,29 +70,6 @@ A local web application that helps track dividend income from investments, focus
 - **File Processing**: CSV files are processed and immediately deleted
 - **Self-Hosted**: Run entirely on your own machine or server
 
-## Data Structure
-
-The app stores data in `dividend_data.json`:
-
-```json
-{
-  "initial_investment": 10000.00,
-  "total_dividends": 8500.00,
-  "principal_recovered": false,
-  "recovery_date": null,
-  "post_recovery_gains": 0.00,
-  "transactions": [...],
-  "monthly_totals": {...}
-}
-```
-
-## CSV Format Support
-
-The app automatically detects common Robinhood CSV column names:
-- Date columns: `Date`, `date`, `Date/Time`, `date/time`
-- Description columns: `Description`, `description`, `Details`, `details`
-- Amount columns: `Amount`, `amount`, `Net Amount`, `net amount`
-
 ## Dividend Detection
 
 The app identifies dividend transactions by looking for these keywords in the description:
@@ -103,30 +77,6 @@ The app identifies dividend transactions by looking for these keywords in the de
 - `div`
 - `distribution`
 
-## Deployment Options
-
-### Local Development
-```bash
-python app.py
-```
-
-### Production Server
-```bash
-# For production, use a WSGI server like Gunicorn
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5000 app:app
-```
-
-### Docker (Optional)
-```dockerfile
-FROM python:3.9-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . .
-EXPOSE 5000
-CMD ["python", "app.py"]
-```
 
 ## Troubleshooting
 
@@ -139,7 +89,7 @@ CMD ["python", "app.py"]
 
 2. **Upload errors**
    - Make sure the file is a valid CSV
-   - Check file size (should be reasonable for account history)
+   - Check file size
    - Ensure proper file permissions
 
 3. **Chart not displaying**
@@ -156,10 +106,6 @@ The app automatically creates backups when resetting data:
 ## Contributing
 
 Feel free to submit issues, feature requests, or pull requests to improve DivTrack.
-
-## License
-
-This project is open source and available under the MIT License.
 
 ## Support
 

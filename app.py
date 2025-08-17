@@ -42,47 +42,72 @@ def save_data(data):
 def parse_robinhood_csv(file_path):
     """Parse Robinhood CSV and extract dividend transactions"""
     try:
-        df = pd.read_csv(file_path)
+        # Simple approach: read CSV and drop any extra columns beyond the first 9
+        # This handles the 10th column issue you mentioned
+        df = pd.read_csv(file_path, on_bad_lines='skip')
         
-        # Common column names for Robinhood CSV
-        possible_date_cols = ['Date', 'date', 'Date/Time', 'date/time']
+        # If we have more than 9 columns, keep only the first 9
+        if len(df.columns) > 9:
+            df = df.iloc[:, :9]
+        
+        # Updated column names to match actual Robinhood CSV format
+        possible_date_cols = ['Date', 'date', 'Date/Time', 'date/time', 'Activity Date', 'Process Date', 'Settle Date']
         possible_desc_cols = ['Description', 'description', 'Details', 'details']
         possible_amount_cols = ['Amount', 'amount', 'Net Amount', 'net amount']
+        possible_instrument_cols = ['Instrument', 'instrument', 'Symbol', 'symbol', 'Security', 'security']
         
         # Find the actual column names
         date_col = next((col for col in possible_date_cols if col in df.columns), None)
         desc_col = next((col for col in possible_desc_cols if col in df.columns), None)
         amount_col = next((col for col in possible_amount_cols if col in df.columns), None)
+        instrument_col = next((col for col in possible_instrument_cols if col in df.columns), None)
         
         if not all([date_col, desc_col, amount_col]):
-            raise ValueError("Could not identify required columns in CSV")
+            # Try to provide helpful error message
+            available_cols = list(df.columns)
+            raise ValueError(f"Could not identify required columns. Available columns: {available_cols}. "
+                           f"Looking for date column (one of {possible_date_cols}), "
+                           f"description column (one of {possible_desc_cols}), "
+                           f"and amount column (one of {possible_amount_cols})")
         
         dividend_transactions = []
         
-        for _, row in df.iterrows():
-            description = str(row[desc_col]).lower()
-            amount = row[amount_col]
-            
-            # Look for dividend-related keywords
-            dividend_keywords = ['dividend', 'div', 'distribution']
-            if any(keyword in description for keyword in dividend_keywords):
-                # Convert amount to float, handling any currency formatting
-                try:
-                    if isinstance(amount, str):
-                        amount = float(amount.replace('$', '').replace(',', ''))
-                    else:
-                        amount = float(amount)
-                    
-                    # Only include positive dividend amounts
-                    if amount > 0:
-                        dividend_transactions.append({
-                            'date': row[date_col],
-                            'description': row[desc_col],
-                            'amount': amount,
-                            'upload_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                        })
-                except (ValueError, TypeError):
-                    continue
+        for index, row in df.iterrows():
+            try:
+                description = str(row[desc_col]).lower()
+                amount = row[amount_col]
+                
+                # Look for dividend-related keywords
+                dividend_keywords = ['dividend', 'div', 'distribution']
+                if any(keyword in description for keyword in dividend_keywords):
+                    # Convert amount to float, handling any currency formatting
+                    try:
+                        if isinstance(amount, str):
+                            # Remove currency symbols and commas
+                            amount = amount.replace('$', '').replace(',', '').strip()
+                            amount = float(amount)
+                        else:
+                            amount = float(amount)
+                        
+                        # Only include positive dividend amounts
+                        if amount > 0:
+                            # Create a clean description with symbol and amount
+                            symbol = str(row[instrument_col]) if instrument_col and instrument_col in row else "Unknown"
+                            clean_description = f"{symbol} Dividend - ${amount:.2f}"
+                            
+                            dividend_transactions.append({
+                                'date': str(row[date_col]),
+                                'description': clean_description,
+                                'amount': amount,
+                                'upload_date': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                            })
+                    except (ValueError, TypeError) as e:
+                        # Skip this transaction if amount can't be parsed
+                        continue
+                        
+            except Exception as e:
+                # Skip problematic rows
+                continue
         
         return dividend_transactions
     
@@ -97,8 +122,30 @@ def update_dividend_totals(data, new_transactions):
         data['total_dividends'] += transaction['amount']
         data['transactions'].append(transaction)
         
-        # Track monthly totals
-        date_obj = datetime.strptime(transaction['date'], '%Y-%m-%d')
+        # Track monthly totals - handle multiple date formats
+        date_str = transaction['date']
+        date_obj = None
+        
+        # Try different date formats
+        date_formats = [
+            '%m/%d/%Y',    # 8/1/2025
+            '%m-%d-%Y',    # 08-01-2025
+            '%Y-%m-%d',    # 2025-08-01
+            '%m/%d/%y',    # 8/1/25
+            '%m-%d-%y'     # 08-01-25
+        ]
+        
+        for fmt in date_formats:
+            try:
+                date_obj = datetime.strptime(date_str, fmt)
+                break
+            except ValueError:
+                continue
+        
+        if date_obj is None:
+            # If no format works, skip this transaction
+            continue
+            
         month_key = date_obj.strftime('%Y-%m')
         if month_key not in data['monthly_totals']:
             data['monthly_totals'][month_key] = 0
