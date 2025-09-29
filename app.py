@@ -6,7 +6,6 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this-in-production'
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
@@ -42,8 +41,7 @@ def save_data(data):
 def parse_robinhood_csv(file_path):
     """Parse Robinhood CSV and extract dividend transactions"""
     try:
-        # Simple approach: read CSV and drop any extra columns beyond the first 9
-        # This handles the 10th column issue you mentioned
+        # Read CSV and drop any extra columns beyond the first 9
         df = pd.read_csv(file_path, on_bad_lines='skip')
         
         # If we have more than 9 columns, keep only the first 9
@@ -63,7 +61,7 @@ def parse_robinhood_csv(file_path):
         instrument_col = next((col for col in possible_instrument_cols if col in df.columns), None)
         
         if not all([date_col, desc_col, amount_col]):
-            # Try to provide helpful error message
+            # Try to provide error message
             available_cols = list(df.columns)
             raise ValueError(f"Could not identify required columns. Available columns: {available_cols}. "
                            f"Looking for date column (one of {possible_date_cols}), "
@@ -91,7 +89,7 @@ def parse_robinhood_csv(file_path):
                         
                         # Only include positive dividend amounts
                         if amount > 0:
-                            # Create a clean description with symbol and amount
+                            # Create a description with symbol and amount
                             symbol = str(row[instrument_col]) if instrument_col and instrument_col in row else "Unknown"
                             clean_description = f"{symbol} Dividend - ${amount:.2f}"
                             
@@ -126,13 +124,12 @@ def update_dividend_totals(data, new_transactions):
         date_str = transaction['date']
         date_obj = None
         
-        # Try different date formats
         date_formats = [
-            '%m/%d/%Y',    # 8/1/2025
-            '%m-%d-%Y',    # 08-01-2025
-            '%Y-%m-%d',    # 2025-08-01
-            '%m/%d/%y',    # 8/1/25
-            '%m-%d-%y'     # 08-01-25
+            '%m/%d/%Y',    
+            '%m-%d-%Y',    
+            '%Y-%m-%d',    
+            '%m/%d/%y',    
+            '%m-%d-%y'     
         ]
         
         for fmt in date_formats:
@@ -284,7 +281,6 @@ def reset_data():
             backup_name = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
             os.rename(DATA_FILE, backup_name)
         
-        # Create fresh data structure
         fresh_data = {
             'initial_investment': 0,
             'total_dividends': 0,

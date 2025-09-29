@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
 """
 DivTrack Startup Script
-A simple script to start the DivTrack dividend tracking application
+A simple script to start the DivTrack dividend tracking application locally
 """
 
 import os
@@ -12,11 +11,11 @@ from threading import Timer
 
 def open_browser():
     """Open the default browser to the DivTrack application"""
-    webbrowser.open('http://localhost:5000')
+    webbrowser.open('http://127.0.0.1:5000/')
 
 def main():
     print("=" * 60)
-    print("🎯 DivTrack - Dividend Income Tracker")
+    print("DivTrack - Dividend Income Tracker")
     print("=" * 60)
     print()
     print("Starting DivTrack application...")
@@ -41,7 +40,7 @@ def main():
         from app import app
         app.run(debug=False, host='0.0.0.0', port=5000)
     except KeyboardInterrupt:
-        print("\n\n👋 DivTrack stopped. Thanks for using DivTrack!")
+        print("\n\nDivTrack stopped. Thanks for using DivTrack!")
     except Exception as e:
         print(f"\n❌ Error starting DivTrack: {e}")
         print("Make sure all dependencies are installed:")

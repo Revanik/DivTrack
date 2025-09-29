@@ -1,6 +1,7 @@
 # Data files
 dividend_data.json
 backup_*.json
+test_app.py
 
 # Upload directory
 uploads/
