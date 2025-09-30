@@ -1,9 +1,15 @@
 # DivTrack - Dividend Income Tracker
 
-A local web application that helps track dividend income from investments, focusing on recovering the original principal and monitoring gains after recovery.
+A multi-user web application that helps track dividend income from investments, focusing on recovering the original principal and monitoring gains after recovery. Each user has their own secure account with isolated data.
 
 ## Features
 
+### 🔐 Multi-User Authentication
+- **User Registration & Login**: Secure user accounts with password protection
+- **Data Isolation**: Each user's dividend data is completely separate and private
+- **Session Management**: Stay logged in across browser sessions
+
+### 📊 Dividend Tracking
 - **CSV Upload**: Upload Robinhood account history CSV files to extract dividend transactions
 - **Dividend Parsing**: Automatically identifies dividend payments from ETFs like MSTY, JEPQ, and others
 - **Principal Tracking**: Tracks total dividends earned against your initial investment
@@ -28,16 +34,22 @@ A local web application that helps track dividend income from investments, focus
    pip install -r requirements.txt
    ```
 
-3. Run the application which will automatically open a localhost server in your default browser:
+3. Initialize the database (first time only):
+   ```bash
+   python init_db.py
+   ```
+
+4. Run the application which will automatically open a localhost server in your default browser:
    ```bash
    python start.py
    ```
 
 ### First Time Setup
 
-1. **Set Initial Investment**: Go to Settings and enter your total initial investment amount
-2. **Upload CSV**: Download your Robinhood account history CSV and upload it
-3. **Monitor Progress**: View your dashboard to see dividend tracking progress
+1. **Create Account**: Register a new user account or login
+2. **Set Initial Investment**: Go to Settings and enter your total initial investment amount
+3. **Upload CSV**: Download your Robinhood account history CSV and upload it
+4. **Monitor Progress**: View your dashboard to see dividend tracking progress
 
 ## How to Use
 

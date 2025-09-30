@@ -37,7 +37,11 @@ def main():
     
     # Import and run the Flask app
     try:
-        from app import app
+        from app import app, db
+        # Initialize database if it doesn't exist
+        with app.app_context():
+            db.create_all()
+            print("✅ Database ready")
         app.run(debug=False, host='0.0.0.0', port=5000)
     except KeyboardInterrupt:
         print("\n\nDivTrack stopped. Thanks for using DivTrack!")

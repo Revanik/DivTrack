@@ -19,30 +19,28 @@
             </div>
             <div class="card-body">
                 <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
                     <div class="mb-3">
-                        <label for="initial_investment" class="form-label">
-                            <strong>Initial Investment Amount</strong>
-                        </label>
+                        {{ form.initial_investment.label(class="form-label") }}
                         <div class="input-group">
                             <span class="input-group-text">$</span>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="initial_investment" 
-                                   name="initial_investment" 
-                                   value="{{ "%.2f"|format(data.initial_investment) }}"
-                                   step="0.01" 
-                                   min="0" 
-                                   required>
+                            {{ form.initial_investment(class="form-control" + (" is-invalid" if form.initial_investment.errors else "")) }}
                         </div>
+                        {% if form.initial_investment.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.initial_investment.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         <div class="form-text">
                             This is the total amount you initially invested. DivTrack will track when your 
                             dividend income equals or exceeds this amount.
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save me-2"></i>Save Settings
-                    </button>
+                    {{ form.submit(class="btn btn-primary") }}
                 </form>
             </div>
         </div>

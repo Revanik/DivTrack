@@ -1,7 +1,6 @@
 # Data files
-dividend_data.json
-backup_*.json
 test_app.py
+instance/dividend_tracker.db
 
 # Upload directory
 uploads/

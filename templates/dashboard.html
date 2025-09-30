@@ -64,7 +64,7 @@
                         </div>
                         <p class="text-muted mt-2">
                             <i class="fas fa-calendar-check me-1"></i>
-                            Recovery achieved on {{ data.recovery_date }}
+                            Recovery achieved on {{ data.recovery_date.strftime('%Y-%m-%d') if data.recovery_date else 'Unknown' }}
                         </p>
                     {% else %}
                         <p class="text-muted">
@@ -112,7 +112,7 @@
                             <div class="list-group-item border-0 px-0">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <small class="text-muted">{{ transaction.date }}</small>
+                                        <small class="text-muted">{{ transaction.date.strftime('%Y-%m-%d') if transaction.date else transaction.date }}</small>
                                         <div class="small">{{ transaction.description[:30] }}{% if transaction.description|length > 30 %}...{% endif %}</div>
                                     </div>
                                     <span class="badge bg-success">${{ "%.2f"|format(transaction.amount) }}</span>
