@@ -1,6 +1,7 @@
 # Data files
 test_app.py
 instance/dividend_tracker.db
+.env
 
 # Upload directory
 uploads/
