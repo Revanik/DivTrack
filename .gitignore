@@ -2,6 +2,9 @@
 test_app.py
 instance/dividend_tracker.db
 .env
+start.py
+run.py
+init_db.py
 
 # Upload directory
 uploads/
