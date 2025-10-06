@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - DivTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-cog me-2"></i>Settings
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-dollar-sign me-2"></i>Investment Configuration
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        {{ form.initial_investment.label(class="form-label") }}
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            {{ form.initial_investment(class="form-control" + (" is-invalid" if form.initial_investment.errors else "")) }}
+                        </div>
+                        {% if form.initial_investment.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.initial_investment.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            This is the total amount you initially invested. DivTrack will track when your 
+                            dividend income equals or exceeds this amount.
+                        </div>
+                    </div>
+                    
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <i class="fas fa-chart-pie me-2"></i>Current Status
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Initial Investment:</span>
+                            <strong>${{ "%.2f"|format(data.initial_investment) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Total Dividends:</span>
+                            <strong>${{ "%.2f"|format(data.total_dividends) }}</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Remaining to Recover:</span>
+                            <strong>${{ "%.2f"|format(data.initial_investment - data.total_dividends) if data.initial_investment > data.total_dividends else 0 }}</strong>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Recovery Status:</span>
+                            <span class="badge {% if data.principal_recovered %}bg-success{% else %}bg-warning{% endif %}">
+                                {% if data.principal_recovered %}
+                                    <i class="fas fa-check me-1"></i>Recovered
+                                {% else %}
+                                    <i class="fas fa-clock me-1"></i>In Progress
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% if data.principal_recovered %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Recovery Date:</span>
+                                <strong>{{ data.recovery_date }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Post-Recovery Gains:</span>
+                                <strong>${{ "%.2f"|format(data.post_recovery_gains) }}</strong>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle me-2"></i>About Initial Investment
+            </div>
+            <div class="card-body">
+                <h6>What is the Initial Investment?</h6>
+                <p class="small">
+                    This is the total amount of money you originally invested in dividend-paying securities 
+                    (like MSTY, JEPQ, etc.). DivTrack uses this to calculate when you've "recovered" your 
+                    principal through dividend income.
+                </p>
+                
+                <h6>Example:</h6>
+                <ul class="small">
+                    <li>You invest $10,000 in dividend ETFs</li>
+                    <li>Over time, you receive $10,000 in dividends</li>
+                    <li>DivTrack flags this as "Principal Recovered"</li>
+                    <li>Any additional dividends are "Post-Recovery Gains"</li>
+                </ul>
+                
+                <h6>Why Track This?</h6>
+                <p class="small">
+                    Principal recovery is a key milestone in dividend investing. Once you've recovered your 
+                    initial investment through dividends, you're essentially earning "free money" while still 
+                    owning the underlying assets.
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <i class="fas fa-question-circle me-2"></i>FAQ
+            </div>
+            <div class="card-body">
+                <div class="accordion accordion-flush" id="faqAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                Can I change this later?
+                            </button>
+                        </h2>
+                        <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small">
+                                Yes, you can update your initial investment amount at any time. DivTrack will 
+                                recalculate your recovery status based on the new amount.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                What if I add more money later?
+                            </button>
+                        </h2>
+                        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small">
+                                You can update the initial investment amount to include additional investments. 
+                                This will reset your recovery progress to account for the new total.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                Does this include DRIP?
+                            </button>
+                        </h2>
+                        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                            <div class="accordion-body small">
+                                Yes, DivTrack tracks all dividend income regardless of whether it's reinvested 
+                                (DRIP) or paid out. The focus is on total dividend income received.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-arrow-left me-2"></i>Navigation
+            </div>
+            <div class="card-body">
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>Back to Dashboard
+                </a>
+                <a href="{{ url_for('upload_file') }}" class="btn btn-outline-success">
+                    <i class="fas fa-upload me-2"></i>Upload CSV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
