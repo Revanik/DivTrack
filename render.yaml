@@ -3,11 +3,21 @@ services:
     name: divtrack
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python run.py
-    runtime: python-3.11
+    # Start command: run a one-time reset only when RESET_DB=true, then start gunicorn
+    startCommand: |
+      if [ "$RESET_DB" = "true" ]; then
+        python manage.py reset_db
+      fi
+      gunicorn app:app --bind 0.0.0.0:$PORT --workers 3
     envVars:
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: RESET_DB
+        value: "false"
       - key: DATABASE_URL
         fromDatabase:
           name: divtrack-db
